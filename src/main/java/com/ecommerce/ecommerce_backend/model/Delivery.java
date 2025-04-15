@@ -6,27 +6,30 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
+@Table(name = "deliveries")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderItem {
+public class Delivery {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+    private String status;
 
-    private int quantity;
+    private LocalDateTime createdAt;
 
-    private double priceAtOrder;
+    @OneToMany(mappedBy = "delivery", cascade = CascadeType.ALL)
+    private List<DeliveryItem> items;
 
 }
