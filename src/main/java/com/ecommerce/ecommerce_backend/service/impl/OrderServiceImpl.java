@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.service.impl;
 
 import com.ecommerce.ecommerce_backend.dto.OrderRequest;
+import com.ecommerce.ecommerce_backend.event.OrderPlacedEvent;
 import com.ecommerce.ecommerce_backend.model.*;
 import com.ecommerce.ecommerce_backend.repository.OrderHistoryRepository;
 import com.ecommerce.ecommerce_backend.repository.OrderRepository;
@@ -9,6 +10,7 @@ import com.ecommerce.ecommerce_backend.repository.UserRepository;
 import com.ecommerce.ecommerce_backend.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderHistoryRepository orderHistoryRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<Order> getAllOrders() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -78,7 +81,8 @@ public class OrderServiceImpl implements OrderService {
 
         orderHistoryRepository.save(history);
 
-//        TODO: Send notification to admin.
+        // When an order is placed, the admin should be notified
+        eventPublisher.publishEvent(new OrderPlacedEvent(this, savedOrder));
 
         return savedOrder;
 
