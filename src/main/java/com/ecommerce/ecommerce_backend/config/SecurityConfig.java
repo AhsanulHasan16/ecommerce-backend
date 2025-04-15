@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,9 +40,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req
+
+                                .requestMatchers(PathRequest.toH2Console()).permitAll()
+                                .requestMatchers("/error").permitAll()
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                                .requestMatchers("/api/buyer/**").hasAnyAuthority("ADMIN", "BUYER")
+                                .requestMatchers("/api/buyer/**").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
