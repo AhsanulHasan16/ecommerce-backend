@@ -48,8 +48,8 @@ public class OrderServiceImpl implements OrderService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sorry, Insufficient Stock");
             }
 
-            product.setQty(product.getQty() - itemRequest.getQuantity());
-            productRepository.save(product);
+//            product.setQty(product.getQty() - itemRequest.getQuantity());
+//            productRepository.save(product);
 
             OrderItem orderItem = OrderItem.builder()
                     .product(product)
@@ -101,11 +101,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Updating product stock. Adding back the old quantity.
-        for (OrderItem oldItem : order.getItems()) {
-            Product product = oldItem.getProduct();
-            product.setQty(product.getQty() + oldItem.getQuantity());
-            productRepository.save(product);
-        }
+//        for (OrderItem oldItem : order.getItems()) {
+//            Product product = oldItem.getProduct();
+//            product.setQty(product.getQty() + oldItem.getQuantity());
+//            productRepository.save(product);
+//        }
 
         // Updating product stock. Subtracting the new quantity.
         List<OrderItem> newItems = new ArrayList<>();
@@ -117,8 +117,8 @@ public class OrderServiceImpl implements OrderService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sorry, Insufficient Stock");
             }
 
-            product.setQty(product.getQty() - itemRequest.getQuantity());
-            productRepository.save(product);
+//            product.setQty(product.getQty() - itemRequest.getQuantity());
+//            productRepository.save(product);
 
             // Adding new item to the same existing order
             OrderItem newItem = OrderItem.builder()
@@ -163,9 +163,28 @@ public class OrderServiceImpl implements OrderService {
     public Order updateOrderStatus(Long orderId, String status) {
 
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order Not Found"));
-        if (!status.equals("APPROVED") && !status.equals("REJECTED")) {
+        if (!status.equals("APPROVED") && !status.equals("REJECTED") && !status.equals("DELIVERED")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Status");
         }
+
+        // When the admin marks an order as delivered, the qty of the product should be updated.
+        if (status.equals("DELIVERED")) {
+            for (OrderItem item : order.getItems()) {
+                Product product = item.getProduct();
+                int orderedQty = item.getQuantity();
+
+                if (product.getQty() < orderedQty) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            "Insufficient Stock For Product: " + product.getName()
+                    );
+                }
+
+                product.setQty(product.getQty() - orderedQty);
+                productRepository.save(product);
+            }
+        }
+
 
         order.setStatus(status);
         Order savedOrder = orderRepository.save(order);
